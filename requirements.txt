@@ -1,0 +1,32 @@
+# Core Framework
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+
+# LLM Providers
+google-genai>=1.44.0
+anthropic>=0.39.0
+
+# MCP Support
+mcp>=1.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+typing-extensions>=4.12.0
+
+# CLI
+click>=8.1.0
+rich>=13.0.0
+
+# Audio Processing
+pydub>=0.25.0
+
+# Git Operations
+gitpython>=3.1.0
+
+# Development
+pytest>=8.0.0
+pytest-asyncio>=0.24.0
+black>=24.0.0
+ruff>=0.6.0

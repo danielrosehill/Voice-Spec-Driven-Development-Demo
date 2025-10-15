@@ -88,9 +88,13 @@ Begin the development sprint now.
             print("   (This may take several minutes as Claude implements the project)")
 
             # Execute Claude Code CLI
-            # Using non-interactive mode with prompt from file
+            # Using --print for non-interactive mode and --dangerously-skip-permissions to avoid prompts
+            # Read prompt from file
+            with open(prompt_file, 'r') as f:
+                prompt_content = f.read()
+
             result = subprocess.run(
-                ["claude", "--dangerously-skip-confirmation", "-f", prompt_file],
+                ["claude", "--print", "--dangerously-skip-permissions", prompt_content],
                 capture_output=True,
                 text=True,
                 timeout=600  # 10 minute timeout

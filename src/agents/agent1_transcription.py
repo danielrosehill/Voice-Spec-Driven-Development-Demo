@@ -3,10 +3,28 @@
 import os
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from google import genai
 from google.genai import types
+from pydantic import BaseModel, Field
 from ..state import ProjectState, AgentStatus
+
+
+class TechRequirements(BaseModel):
+    """Technical requirements schema"""
+    languages: List[str] = Field(description="List of programming languages")
+    frameworks: List[str] = Field(description="List of frameworks and libraries")
+    dependencies: List[str] = Field(description="List of dependencies")
+    architecture: str = Field(description="Architecture description")
+
+
+class ProjectSpecification(BaseModel):
+    """Structured project specification schema"""
+    project_name: str = Field(description="Suggested project name in kebab-case")
+    project_description: str = Field(description="Brief 1-2 sentence description")
+    dev_specification: str = Field(description="Detailed specification in markdown format")
+    tech_requirements: TechRequirements = Field(description="Technical requirements")
+    features: List[str] = Field(description="List of features and functionalities")
 
 
 class TranscriptionAgent:
@@ -47,7 +65,7 @@ class TranscriptionAgent:
 
     def optimize_specification(self, transcript: str) -> Dict[str, Any]:
         """
-        Parse transcript and create structured development specification
+        Parse transcript and create structured development specification using structured output
         """
         prompt = f"""
         You are a technical specification analyst. Parse the following transcript
@@ -55,20 +73,6 @@ class TranscriptionAgent:
 
         Transcript:
         {transcript}
-
-        Please provide a JSON response with the following structure:
-        {{
-            "project_name": "suggested-project-name",
-            "project_description": "Brief 1-2 sentence description",
-            "dev_specification": "Detailed specification in markdown format",
-            "tech_requirements": {{
-                "languages": ["list", "of", "languages"],
-                "frameworks": ["list", "of", "frameworks"],
-                "dependencies": ["list", "of", "dependencies"],
-                "architecture": "architecture description"
-            }},
-            "features": ["feature 1", "feature 2", "feature 3"]
-        }}
 
         Guidelines:
         - Suggest a clear, kebab-case project name
@@ -80,21 +84,16 @@ class TranscriptionAgent:
 
         response = self.client.models.generate_content(
             model=self.model_id,
-            contents=prompt
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type='application/json',
+                response_schema=ProjectSpecification,
+            )
         )
 
-        # Parse JSON from response
-        response_text = response.text.strip()
-
-        # Remove markdown code blocks if present
-        if response_text.startswith("```json"):
-            response_text = response_text.split("```json")[1]
-            response_text = response_text.split("```")[0]
-        elif response_text.startswith("```"):
-            response_text = response_text.split("```")[1]
-            response_text = response_text.split("```")[0]
-
-        return json.loads(response_text.strip())
+        # Parse the structured response - response.text is guaranteed valid JSON
+        spec_data = json.loads(response.text)
+        return spec_data
 
     def execute(self, state: ProjectState) -> ProjectState:
         """
